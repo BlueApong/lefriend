@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pers.apong.lefriend.mapper.TeamMapper">
+
+    <resultMap id="BaseResultMap" type="pers.apong.lefriend.model.domain.Team">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="maxNum" column="max_num" jdbcType="INTEGER"/>
+            <result property="expireTime" column="expire_time" jdbcType="TIMESTAMP"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="is_delete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,user_id,
+        password,description,status,
+        max_num,expire_time,create_time,
+        update_time,is_delete
+    </sql>
+
+    <resultMap id="TeamUserVoResultMap" type="pers.apong.lefriend.model.vo.TeamUserVo">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="maxNum" column="max_num" jdbcType="INTEGER"/>
+        <result property="expireTime" column="expire_time" jdbcType="TIMESTAMP"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="leaderName" column="leader_name" jdbcType="VARCHAR" />
+        <result property="teamCoverImage" column="team_cover_image" jdbcType="VARCHAR" />
+        <collection property="userList" ofType="pers.apong.lefriend.model.vo.UserVo">
+            <id property="id" column="u_id" jdbcType="BIGINT"/>
+            <result property="username" column="username" jdbcType="VARCHAR"/>
+            <result property="userAccount" column="user_account" jdbcType="VARCHAR"/>
+            <result property="avatarUrl" column="avatar_url" jdbcType="VARCHAR"/>
+            <result property="gender" column="gender" jdbcType="TINYINT"/>
+            <result property="phone" column="phone" jdbcType="VARCHAR"/>
+            <result property="email" column="email" jdbcType="VARCHAR"/>
+            <result property="userStatus" column="user_status" jdbcType="INTEGER"/>
+            <result property="createTime" column="u_create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="u_update_time" jdbcType="TIMESTAMP"/>
+            <result property="userRole" column="user_role" jdbcType="INTEGER"/>
+            <result property="planetCode" column="planet_code" jdbcType="VARCHAR"/>
+            <result property="tags" column="tags" jdbcType="VARCHAR"/>
+            <result property="profile" column="profile" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryAllTeamWithUser" resultMap="TeamUserVoResultMap">
+        select
+            t.id, t.name, t.user_id, t.description, t.status, t.max_num, t.expire_time, t.create_time, t.update_time,
+            ul.username leader_name, ul.avatar_url team_cover_image,
+            u.id u_id, u.username, u.user_account, u.avatar_url, u.gender, u.phone, u.email, u.user_status,
+            u.create_time u_create_time, u.update_time u_update_time, u.user_role, u.planet_code, u.tags, u.profile
+        from (select * from team limit #{current},#{pageSize}) t
+                 left join user ul on t.user_id = ul.id
+                 left join user_team ut on t.id = ut.team_id
+                 left join user u on ut.user_id = u.id
+        ${ew.customSqlSegment} and t.is_delete = 0 and ut.is_delete = 0
+    </select>
+
+    <sql id="TeamUserQuery">
+        select
+            t.id, t.name, t.user_id, t.description, t.status, t.max_num, t.expire_time, t.create_time, t.update_time,
+            ul.username leader_name,
+            u.id u_id, u.username, u.user_account, u.avatar_url, u.gender, u.phone, u.email, u.user_status,
+            u.create_time u_create_time, u.update_time u_update_time, u.user_role, u.planet_code, u.tags, u.profile
+        from team t
+                 left join user ul on t.user_id = ul.id
+                 left join user_team ut on t.id = ut.team_id
+                 left join user u on ut.user_id = u.id
+    </sql>
+
+    <select id="queryTeamWithUser" resultMap="TeamUserVoResultMap">
+        <include refid="TeamUserQuery" />
+        where t.id = #{teamId} and t.is_delete = 0 and ut.is_delete = 0
+    </select>
+
+    <select id="queryMyTeam" resultMap="TeamUserVoResultMap">
+        <include refid="TeamUserQuery" />
+        where t.user_id = #{userId} and t.is_delete = 0 and ut.is_delete = 0
+    </select>
+</mapper>
